@@ -1,5 +1,5 @@
 import { generateText } from "ai";
-import { chatModel } from "./models";
+import { chatModel, chatOptions } from "./models";
 import { type Hit, search } from "./retriever";
 
 const INSTRUCTIONS = `You answer questions about Kumail Rizvi, a computer science student, using ONLY the numbered context passages provided.
@@ -35,8 +35,9 @@ export async function answerQuestion(question: string, k = 5): Promise<Answer> {
       model: chatModel,
       instructions: INSTRUCTIONS,
       prompt: `Context passages:\n\n${formatContext(hits)}\n\nQuestion: ${question}`,
-      maxOutputTokens: 400,
+      maxOutputTokens: 1024,
       temperature: 0,
+      ...chatOptions,
     });
     return { answer: text.trim(), sources, retrieval: mode, generated: true };
   } catch (err) {

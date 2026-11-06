@@ -24,3 +24,9 @@ export const queryEmbedOptions = googleOpts("RETRIEVAL_QUERY");
 export const chatModel = useGemini
   ? google(process.env.CHAT_MODEL ?? "gemini-3.5-flash")
   : (process.env.CHAT_MODEL ?? "anthropic/claude-haiku-5.5");
+
+// Gemini 3.x "thinks" before answering, and those hidden tokens count against the
+// output limit. Answering from 5 passages needs little reasoning, so keep it minimal.
+export const chatOptions = useGemini
+  ? { providerOptions: { google: { thinkingConfig: { thinkingLevel: "minimal" as const } } } }
+  : {};
