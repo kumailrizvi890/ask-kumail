@@ -1,0 +1,32 @@
+{
+  "name": "ask-kumail",
+  "version": "1.0.0",
+  "description": "RAG assistant and MCP server over Kumail Rizvi's resume and project docs",
+  "scripts": {
+    "corpus": "tsx scripts/build-corpus.ts",
+    "dev": "npm run corpus && next dev",
+    "build": "npm run corpus && next build",
+    "start": "next start",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@ai-sdk/gateway": "^4.0.136",
+    "@modelcontextprotocol/server": "^2.4.0",
+    "ai": "^7.0.163",
+    "mcp-handler": "^2.3.1",
+    "next": "^16.4.5",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  },
+  "private": true
+}
