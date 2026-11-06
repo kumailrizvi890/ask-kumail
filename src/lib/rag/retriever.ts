@@ -3,8 +3,7 @@ import { BM25 } from "./bm25";
 import { type Chunk, chunkForIndex } from "./chunk";
 import { cosine, reciprocalRankFusion } from "./fuse";
 import generated from "./chunks.generated.json";
-
-export const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL ?? "openai/text-embedding-3-small";
+import { embeddingModel } from "./models";
 
 export type Mode = "hybrid" | "keyword" | "vector";
 export type Hit = Chunk & { rank: number; score: number };
@@ -15,11 +14,11 @@ const indexTexts = chunks.map(chunkForIndex);
 const bm25 = new BM25(indexTexts);
 
 // Chunk embeddings are computed once per server instance and reused.
-// ~40 chunks is a single batched API call, so there is no separate vector database.
+// ~70 chunks is a single batched API call, so there is no separate vector database.
 let chunkVectors: Promise<number[][]> | null = null;
 function getChunkVectors(): Promise<number[][]> {
   if (!chunkVectors) {
-    chunkVectors = embedMany({ model: EMBEDDING_MODEL, values: indexTexts }).then((r) => r.embeddings);
+    chunkVectors = embedMany({ model: embeddingModel, values: indexTexts }).then((r) => r.embeddings);
     chunkVectors.catch(() => (chunkVectors = null)); // retry on the next request instead of caching a failure
   }
   return chunkVectors;
@@ -42,7 +41,7 @@ export function listDocuments() {
 async function vectorRanking(query: string): Promise<[number, number][]> {
   const [vectors, { embedding }] = await Promise.all([
     getChunkVectors(),
-    embed({ model: EMBEDDING_MODEL, value: query }),
+    embed({ model: embeddingModel, value: query }),
   ]);
   return vectors
     .map((v, i) => [i, cosine(v, embedding)] as [number, number])

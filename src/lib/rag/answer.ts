@@ -1,7 +1,6 @@
 import { generateText } from "ai";
+import { chatModel } from "./models";
 import { type Hit, search } from "./retriever";
-
-export const CHAT_MODEL = process.env.CHAT_MODEL ?? "anthropic/claude-haiku-5.5";
 
 const INSTRUCTIONS = `You answer questions about Kumail Rizvi, a computer science student, using ONLY the numbered context passages provided.
 Rules:
@@ -33,7 +32,7 @@ export async function answerQuestion(question: string, k = 5): Promise<Answer> {
 
   try {
     const { text } = await generateText({
-      model: CHAT_MODEL,
+      model: chatModel,
       instructions: INSTRUCTIONS,
       prompt: `Context passages:\n\n${formatContext(hits)}\n\nQuestion: ${question}`,
       maxOutputTokens: 400,
