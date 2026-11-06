@@ -7,9 +7,19 @@ const useGemini = Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY);
 
 export const provider = useGemini ? "gemini" : "ai-gateway";
 
-export const embeddingModel = useGemini
-  ? google.embeddingModel(process.env.EMBEDDING_MODEL ?? "gemini-embedding-001")
-  : (process.env.EMBEDDING_MODEL ?? "openai/text-embedding-3-small");
+const embeddingName = process.env.EMBEDDING_MODEL ?? (useGemini ? "gemini-embedding-001" : "openai/text-embedding-3-small");
+
+export const embeddingModel = useGemini ? google.embeddingModel(embeddingName) : embeddingName;
+
+/** Identifies which model + settings produced a vector, so stale precomputed vectors are never mixed in. */
+export const embeddingId = `${provider}:${embeddingName}:${useGemini ? 768 : "default"}`;
+
+// Gemini embeds documents and questions slightly differently when told which is which,
+// and 768 dimensions keeps the precomputed vectors small.
+const googleOpts = (taskType: "RETRIEVAL_DOCUMENT" | "RETRIEVAL_QUERY") =>
+  useGemini ? { providerOptions: { google: { outputDimensionality: 768, taskType } } } : {};
+export const docEmbedOptions = googleOpts("RETRIEVAL_DOCUMENT");
+export const queryEmbedOptions = googleOpts("RETRIEVAL_QUERY");
 
 export const chatModel = useGemini
   ? google(process.env.CHAT_MODEL ?? "gemini-3.5-flash")

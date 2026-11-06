@@ -3,7 +3,7 @@ import { BM25 } from "./bm25";
 import { type Chunk, chunkForIndex } from "./chunk";
 import { cosine, reciprocalRankFusion } from "./fuse";
 import generated from "./chunks.generated.json";
-import { embeddingModel } from "./models";
+import { docEmbedOptions, embeddingId, embeddingModel, queryEmbedOptions } from "./models";
 
 export type Mode = "hybrid" | "keyword" | "vector";
 export type Hit = Chunk & { rank: number; score: number };
@@ -13,12 +13,17 @@ const chunks = generated.chunks as Chunk[];
 const indexTexts = chunks.map(chunkForIndex);
 const bm25 = new BM25(indexTexts);
 
-// Chunk embeddings are computed once per server instance and reused.
-// ~70 chunks is a single batched API call, so there is no separate vector database.
-let chunkVectors: Promise<number[][]> | null = null;
+// Chunk vectors normally come precomputed from the build step. If they're missing
+// (or were made by a different model), compute them once per server instance instead.
+// ~70 chunks fit in memory, so there is no separate vector database.
+const prebuilt = generated as { embeddingId?: string | null; vectors?: number[][] | null };
+let chunkVectors: Promise<number[][]> | null =
+  prebuilt.vectors && prebuilt.embeddingId === embeddingId ? Promise.resolve(prebuilt.vectors) : null;
+export const vectorsPrebuilt = chunkVectors !== null;
+
 function getChunkVectors(): Promise<number[][]> {
   if (!chunkVectors) {
-    chunkVectors = embedMany({ model: embeddingModel, values: indexTexts }).then((r) => r.embeddings);
+    chunkVectors = embedMany({ model: embeddingModel, values: indexTexts, ...docEmbedOptions }).then((r) => r.embeddings);
     chunkVectors.catch(() => (chunkVectors = null)); // retry on the next request instead of caching a failure
   }
   return chunkVectors;
@@ -45,14 +50,14 @@ const queryCache = new Map<string, number[]>();
 export async function warmQueries(queries: string[]): Promise<void> {
   const missing = queries.filter((q) => !queryCache.has(q));
   if (missing.length === 0) return;
-  const { embeddings } = await embedMany({ model: embeddingModel, values: missing });
+  const { embeddings } = await embedMany({ model: embeddingModel, values: missing, ...queryEmbedOptions });
   missing.forEach((q, i) => queryCache.set(q, embeddings[i]));
 }
 
 async function embedQuery(query: string): Promise<number[]> {
   const hit = queryCache.get(query);
   if (hit) return hit;
-  const { embedding } = await embed({ model: embeddingModel, value: query });
+  const { embedding } = await embed({ model: embeddingModel, value: query, ...queryEmbedOptions });
   if (queryCache.size > 500) queryCache.clear();
   queryCache.set(query, embedding);
   return embedding;

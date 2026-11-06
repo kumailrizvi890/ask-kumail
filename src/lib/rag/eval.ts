@@ -30,8 +30,8 @@ export const EVAL_SET: { q: string; expect: string }[] = [
   { q: "Did he build something to protect people from phishing?", expect: "qmail" },
 ];
 
-export type EvalRow = { q: string; expect: string; rankOfExpected: number | null; top3: string[] };
-export type EvalSummary = { mode: Mode; n: number; hitAt1: number; hitAt3: number; mrr: number; rows: EvalRow[]; note?: string };
+export type EvalRow = { q: string; expect: string; rankOfExpected: number | null; top3: string[]; fellBack: boolean };
+export type EvalSummary = { mode: Mode; n: number; hitAt1: number; hitAt3: number; mrr: number; fallbacks: number; rows: EvalRow[]; note?: string };
 
 const pct = (x: number) => Math.round(x * 1000) / 10;
 
@@ -49,10 +49,13 @@ export async function runEval(
     const docOrder: string[] = [];
     for (const h of res.hits) if (!docOrder.includes(h.docId)) docOrder.push(h.docId);
     const pos = docOrder.indexOf(expect);
-    rows.push({ q, expect, rankOfExpected: pos === -1 ? null : pos + 1, top3: docOrder.slice(0, 3) });
+    rows.push({ q, expect, rankOfExpected: pos === -1 ? null : pos + 1, top3: docOrder.slice(0, 3), fellBack: res.mode !== mode });
   }
   const n = rows.length;
   const at = (r: number) => rows.filter((x) => x.rankOfExpected !== null && x.rankOfExpected <= r).length / n;
   const mrr = rows.reduce((s, x) => s + (x.rankOfExpected ? 1 / x.rankOfExpected : 0), 0) / n;
-  return { mode, n, hitAt1: pct(at(1)), hitAt3: pct(at(3)), mrr: Math.round(mrr * 1000) / 1000, rows, note };
+  // fallbacks = questions that silently used keyword search because an API call failed;
+  // a run with fallbacks doesn't measure the mode it claims to.
+  const fallbacks = rows.filter((r) => r.fellBack).length;
+  return { mode, n, hitAt1: pct(at(1)), hitAt3: pct(at(3)), mrr: Math.round(mrr * 1000) / 1000, fallbacks, rows, note };
 }

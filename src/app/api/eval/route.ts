@@ -1,5 +1,5 @@
 import { EVAL_SET, runEval } from "@/lib/rag/eval";
-import { search, warmQueries } from "@/lib/rag/retriever";
+import { search, vectorsPrebuilt, warmQueries } from "@/lib/rag/retriever";
 
 export const maxDuration = 60;
 
@@ -15,10 +15,12 @@ export async function GET() {
   const results = [];
   for (const mode of ["keyword", "vector", "hybrid"] as const) results.push(await runEval(search, mode));
   const data = {
-    summary: results.map(({ mode, n, hitAt1, hitAt3, mrr, note }) => ({ mode, n, hitAt1, hitAt3, mrr, note })),
+    summary: results.map(({ mode, n, hitAt1, hitAt3, mrr, fallbacks, note }) => ({ mode, n, hitAt1, hitAt3, mrr, fallbacks, note })),
+    vectorsPrebuilt,
     warmError,
     details: results,
   };
-  cached = { at: Date.now(), data };
+  // Only cache clean runs, so a rate-limited run can't stick around for an hour.
+  if (results.every((r) => r.fallbacks === 0)) cached = { at: Date.now(), data };
   return Response.json(data);
 }
