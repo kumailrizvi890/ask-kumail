@@ -38,11 +38,28 @@ export function listDocuments() {
   return [...seen.values()];
 }
 
+// Query embeddings are cached so repeated questions (and the eval) don't re-call the API.
+const queryCache = new Map<string, number[]>();
+
+/** Embeds many questions in one batched call, e.g. before running the eval. */
+export async function warmQueries(queries: string[]): Promise<void> {
+  const missing = queries.filter((q) => !queryCache.has(q));
+  if (missing.length === 0) return;
+  const { embeddings } = await embedMany({ model: embeddingModel, values: missing });
+  missing.forEach((q, i) => queryCache.set(q, embeddings[i]));
+}
+
+async function embedQuery(query: string): Promise<number[]> {
+  const hit = queryCache.get(query);
+  if (hit) return hit;
+  const { embedding } = await embed({ model: embeddingModel, value: query });
+  if (queryCache.size > 500) queryCache.clear();
+  queryCache.set(query, embedding);
+  return embedding;
+}
+
 async function vectorRanking(query: string): Promise<[number, number][]> {
-  const [vectors, { embedding }] = await Promise.all([
-    getChunkVectors(),
-    embed({ model: embeddingModel, value: query }),
-  ]);
+  const [vectors, embedding] = await Promise.all([getChunkVectors(), embedQuery(query)]);
   return vectors
     .map((v, i) => [i, cosine(v, embedding)] as [number, number])
     .sort((a, b) => b[1] - a[1]);
