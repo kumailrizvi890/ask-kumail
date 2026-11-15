@@ -256,7 +256,7 @@ export default function Home() {
       <p>
         <a href="https://github.com/kumailrizvi890/ask-kumail">Source on GitHub</a> ·{" "}
         <a href="#evidence">Retrieval eval results</a> ·{" "}
-        <a href="https://kumailrizvi.dev">Portfolio</a>
+        <a href="https://portfolio-kumailr.vercel.app">Portfolio</a>
       </p>
     </main>
   );
