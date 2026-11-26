@@ -36,15 +36,15 @@ In Claude, add a custom connector with the endpoint URL above.
 
 ## Evaluation
 
-`src/lib/rag/eval.ts` holds 22 labeled questions (16 direct, 6 paraphrased with little word overlap). `/api/eval` runs all of them in keyword-only, vector-only and hybrid mode and reports hit@1, hit@3 and mean reciprocal rank at the document level.
+`src/lib/rag/eval.ts` holds 25 labeled questions (18 direct, 7 paraphrased with little word overlap). `/api/eval` runs all of them in keyword-only, vector-only and hybrid mode and reports hit@1, hit@3 and mean reciprocal rank at the document level.
 
 Results on the live site (Nov 2026, Gemini embeddings, zero fallbacks):
 
 | Mode | hit@1 | hit@3 | MRR |
 | --- | --- | --- | --- |
-| Keyword (BM25) | 86.4% | 95.5% | 0.909 |
-| Vector | 100% | 100% | 1.000 |
-| Hybrid (RRF) | 90.9% | 100% | 0.947 |
+| Keyword (BM25) | 88% | 96% | 0.920 |
+| Vector | 92% | 100% | 0.960 |
+| Hybrid (RRF) | 88% | 96% | 0.913 |
 
 Keyword search misses paraphrases. On this set, vector search alone beats hybrid, because BM25 sometimes promotes a document that shares a common word ("job"). Hybrid is kept for exact-term lookups and as the fallback when the embedding API is unavailable; the set doesn't test exact terms yet, so that tradeoff is still open. The eval reports how many questions fell back to keyword search and never caches a run that had any.
 
