@@ -9,7 +9,7 @@ Ask Kumail is a retrieval-augmented generation (RAG) assistant and a remote Mode
 
 ## How retrieval works
 
-Documents are split by markdown headings into chunks, and each chunk keeps its document title and section path as a header. Retrieval is hybrid: BM25 keyword scoring and embedding cosine similarity (OpenAI text-embedding-3-small through the Vercel AI Gateway) each produce a ranking, and the two rankings are merged with reciprocal rank fusion. The top chunks are sent to the model, which must answer only from them and cite them by number.
+Documents are split by markdown headings into chunks, and each chunk keeps its document title and section path as a header. Retrieval is hybrid: BM25 keyword scoring and embedding cosine similarity (Gemini embeddings, with OpenAI text-embedding-3-small through the Vercel AI Gateway as a fallback) each produce a ranking, and the two rankings are merged with reciprocal rank fusion. The top chunks are sent to the model, which must answer only from them and cite them by number.
 
 ## MCP server
 
