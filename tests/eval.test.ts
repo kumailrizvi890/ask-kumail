@@ -24,9 +24,10 @@ describe("runEval scoring", () => {
   it("computes hit@1, hit@3 and MRR from document-level ranks", async () => {
     const s = await runEval(fakeSearch("hybrid"), "hybrid");
     expect(s.n).toBe(EVAL_SET.length);
-    expect(s.hitAt1).toBe(50);
+    const atOneCount = EVAL_SET.filter((_, i) => i % 2 === 0).length;
+    expect(s.hitAt1).toBe(Math.round((atOneCount / EVAL_SET.length) * 1000) / 10);
     expect(s.hitAt3).toBe(100);
-    expect(s.mrr).toBeCloseTo(0.75, 6); // (1 + 1/2) / 2
+    expect(s.mrr).toBeCloseTo((atOneCount + (EVAL_SET.length - atOneCount) / 2) / EVAL_SET.length, 6);
     expect(s.fallbacks).toBe(0);
     expect(s.rows.every((r) => r.rankOfExpected === 1 || r.rankOfExpected === 2)).toBe(true);
   });
@@ -52,7 +53,7 @@ describe("keyword search over the real corpus", () => {
     expect(new Set(allChunks().map((c) => c.id)).size).toBe(allChunks().length);
   });
   it("ranks the expected document first for the direct eval questions", async () => {
-    for (const { q, expect: doc } of EVAL_SET.slice(0, 16)) {
+    for (const { q, expect: doc } of EVAL_SET.slice(0, 18)) {
       const res = await search(q, 5, "keyword");
       expect(res.mode).toBe("keyword");
       expect(res.hits[0]?.docId, q).toBe(doc);
