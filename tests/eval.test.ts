@@ -46,7 +46,7 @@ describe("keyword search over the real corpus", () => {
   it("indexes every shipped document exactly once", () => {
     const docs = listDocuments();
     expect(docs.map((d) => d.id).sort()).toEqual(
-      ["ask-kumail", "fade-kings", "ops-automation", "pawpass", "qmail", "resume", "tradepro"],
+      ["ask-kumail", "fade-kings", "ops-automation", "pawpass", "pulse-find", "qmail", "resume", "tradepro"],
     );
     expect(docs.reduce((s, d) => s + d.sections, 0)).toBe(allChunks().length);
     expect(new Set(allChunks().map((c) => c.id)).size).toBe(allChunks().length);
