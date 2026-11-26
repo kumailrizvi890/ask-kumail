@@ -20,6 +20,8 @@ export const EVAL_SET: { q: string; expect: string }[] = [
   { q: "How does the assistant combine keyword search with semantic search?", expect: "ask-kumail" },
   { q: "Can other AI assistants connect to his documents, and through what protocol?", expect: "ask-kumail" },
   { q: "How is retrieval quality measured?", expect: "ask-kumail" },
+  { q: "What does Kumail use to track his job applications?", expect: "pulse-find" },
+  { q: "How can an AI assistant update his job application tracker?", expect: "pulse-find" },
   // Paraphrases: little or no word overlap with the source document. These are
   // where semantic (embedding) search is supposed to help.
   { q: "Has he ever worked a retail or customer-facing job?", expect: "resume" },
@@ -28,6 +30,7 @@ export const EVAL_SET: { q: string; expect: string }[] = [
   { q: "Which app gives customers loyalty perks for coming back?", expect: "fade-kings" },
   { q: "Does anything run automatically on a timer without anyone clicking a button?", expect: "ops-automation" },
   { q: "Did he build something to protect people from phishing?", expect: "qmail" },
+  { q: "How does he know when a company has stopped replying to him?", expect: "pulse-find" },
 ];
 
 export type EvalRow = { q: string; expect: string; rankOfExpected: number | null; top3: string[]; fellBack: boolean };
